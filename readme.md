@@ -1,3 +1,2 @@
-ovo
-BMSConverter
-v0.1 2023-11-19
+BMS-wav2ogg built by Python
+2023/11/20 v0.1 
