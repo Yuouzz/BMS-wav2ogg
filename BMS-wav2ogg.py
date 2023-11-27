@@ -2,36 +2,46 @@ import glob
 import os
 import subprocess
 import configparser
+
 state = True
 path = ""
 
 
 def bms_adapt(_path_):
+    if os.path.exists("config.ini"):
+        config = configparser.ConfigParser()
+        config.read("config.ini")
+        _input_format_ = config_read(config, 'convert', 'input_format')
+        _output_format_ = config_read(config, 'convert', 'output_format')
+    else:
+        _input_format_ = "None"
+        _output_format_ = "None"
+    # Read config
     bms_path = _path_ + "*.bms"
     bme_path = _path_ + "*.bme"
     _list_ = glob.glob(bms_path) + glob.glob(bme_path)
     print("Editing...")
     if _list_:
-        for bms in _list_:
-            print("BMS list:" + bms)
+        for bmx in _list_:
+            print("BMS list:" + bmx)
         print(str(len(_list_)) + " BMS file(s) founded.")
         print("Would you like to convert these file(s)?(Y/N)")
-        choice1 = input()
-        if choice1.lower() == "y":
-            for bms in _list_:
-                _f_ = open(bms, 'rb')
-                con = _f_.read().decode(encoding="UTF-8-sig", errors="ignore").replace(".wav", ".ogg")
+        choice_convert = input()
+        if choice_convert.lower() == "y":
+            for bmx in _list_:
+                _f_ = open(bmx, 'rb')
+                con = _f_.read().decode(encoding="UTF-8-sig", errors="ignore").replace(_input_format_, _output_format_)
                 _f_.close()
-                f_temp = open(bms + "_temp.txt", 'w+')
+                f_temp = open(bmx + "_temp.txt", 'w+')
                 f_temp.write(con)
                 f_temp.close()
-                os.remove(bms)
-                os.rename(bms + "_temp.txt", bms)
+                os.remove(bmx)
+                os.rename(bmx + "_temp.txt", bmx)
             print("All BMS(es) has(ve) been adapted.")
     else:
         print("No BMS file(s) founded.")
-    choice2 = input("Do you want to continue? (Y/N): ")
-    if choice2.lower() == 'n':
+    choice_continue = input("Do you want to continue? (Y/N): ")
+    if choice_continue.lower() == 'n':
         global state
         state = False
 
@@ -51,20 +61,18 @@ def convert(_path_):
         _channels_ = "None"
         _frequency_ = "None"
         _ffmpeg_path_ = "None"
-    if _input_format_:
-        if _input_format_ == "None":
-            input_file = _path_ + "*.wav"
-        else:
-            input_file = _path_ + "*." + _input_format_
+    # Read config.
+    if _input_format_ and not _input_format_ == "None":
+        input_file = _path_ + "*." + _input_format_
     else:
         input_file = _path_ + "*.wav"
     _list_ = glob.glob(input_file)
-    if _ffmpeg_path_:
-        if not _ffmpeg_path_ == "None":
-            subprocess.run(_ffmpeg_path_)
+    # Get input file(s) list.
+    if _ffmpeg_path_ and not _ffmpeg_path_ == "None":
+        subprocess.run(_ffmpeg_path_)
     print("Converting...")
     if _list_:
-        print(str(len(_list_)) + " WAV file(s) founded.\nWould you like to convert these file(s)?(Y/N)")
+        print(str(len(_list_)) + " sound file(s) founded.\nWould you like to convert these file(s)?(Y/N)")
         choice_convert = input()
         if choice_convert.lower() == "y":
             for _input_file_ in _list_:
@@ -74,14 +82,14 @@ def convert(_path_):
                     _output_format_ = "ogg"
                 _output_file_ = _input_file_.replace("." + _input_format_, "." + _output_format_)
                 cmd = "ffmpeg -i " + _input_file_
-                if not _channels_ == "None":
+                if _channels_ and not _channels_ == "None":
                     cmd += " -ac " + _channels_
-                if not _frequency_ == "None":
+                if _frequency_ and not _frequency_ == "None":
                     cmd += " -ar " + _frequency_
                 cmd += " " + _output_file_
                 subprocess.run(cmd)
                 os.remove(_input_file_)
-                print(_input_file_ + "has been converted.")
+                print(_input_file_ + " has been converted.")
             print("Convert completed.")
     else:
         print("No WAV file founded")
@@ -132,7 +140,8 @@ def settings_convert(_configdict_):
               "3.Edit channels\n"
               "4.Edit frequency\n"
               "5.Clear settings\n"
-              "6.Select FFmpeg path")
+              "6.Select FFmpeg path\n"
+              "7.Exit")
         choice = int(input())
         if choice == 1:
             print("Please print the input format:(Example:wav)")
